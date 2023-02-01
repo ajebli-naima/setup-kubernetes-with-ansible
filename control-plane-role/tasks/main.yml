@@ -1,0 +1,114 @@
+---
+# # tasks file for control-plane-role
+# - name: Gather instance facts
+#   setup:
+
+# - name: Create a standard location for etcd certificates
+#   become: true
+#   shell: command sudo mkdir -p /etc/kubernetes/pki/etcd
+
+# - name: Copy etcd certificates to kmaster nodes
+#   become: true
+#   copy:
+#     src: '{{HOME}}/k8s-certs/{{ item }}'
+#     dest: /etc/kubernetes/pki/etcd
+#   with_items:
+#   - ca.pem
+#   - etcd.pem
+#   - etcd-key.pem
+
+# - name: Copy Kubeadm config file script to first kmaster node
+#   template: 
+#     src: kubeadm-config.sh
+#     dest: '{{HOME}}/kubeadm-config.sh'
+#   delegate_to: "{{ groups['k8s_control_planes'][0] }}"
+
+# - name: Create Kubeadm config
+#   become: true
+#   shell: |
+#     chmod +x '{{HOME}}/kubeadm-config.sh'
+#     '{{HOME}}/kubeadm-config.sh'
+#   delegate_to: "{{ groups['k8s_control_planes'][0] }}"
+
+# - name: Initialize Kubernetes Cluster on the first master
+#   become: true  
+#   shell: command sudo kubeadm init --config kubeadm-config.yaml --ignore-preflight-errors=all
+#   delegate_to: "{{ groups['k8s_control_planes'][0] }}"
+
+# - name: Copy k8s admin config to home directory
+#   shell: |
+#     mkdir -p '{{HOME}}/.kube'
+#   delegate_to: "{{ groups['k8s_control_planes'][0] }}"
+
+# - name: Copy K8s config
+#   become: true
+#   copy:
+#     src: /etc/kubernetes/admin.conf
+#     dest: '{{HOME}}/.kube/config'
+#     remote_src: yes
+#   delegate_to: "{{ groups['k8s_control_planes'][0] }}"
+
+# - name: Chown kubeconfig
+#   become: true
+#   shell: command chown $(id -u):$(id -g) '{{HOME}}/.kube/config'
+#   delegate_to: "{{ groups['k8s_control_planes'][0] }}"
+
+# - name: Deploy Calico network
+#   shell: |
+#       kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+#   delegate_to: "{{ groups['k8s_control_planes'][0] }}"
+
+- name: Fetch Kubernetes certificates
+  become: true
+  fetch: 
+    src: /etc/kubernetes/pki/{{ item }}
+    dest: buffer/ 
+    flat: yes
+  with_items:
+  - "{{ k8s_certificates }}"
+  delegate_to: "{{ groups['k8s_control_planes'][0] }}"
+
+- name: Copy Kubernetes certificates to second master
+  become: true
+  copy:
+    src: buffer/{{ item }}
+    dest: /etc/kubernetes/pki/
+  delegate_to: "{{ groups['k8s_control_planes'][1] }}"
+  with_items:
+    - "{{ k8s_certificates }}"
+
+- name: Fetch Kubernetes config
+  become: true
+  fetch: 
+    src: /etc/kubernetes/{{ item }}
+    dest: buffer/ 
+    flat: yes
+  with_items:
+  - "{{ k8s_config }}"
+  delegate_to: "{{ groups['k8s_control_planes'][0] }}"
+
+- name: Copy Kubernetes config to second master
+  become: true
+  copy:
+    src: buffer/{{ item }}
+    dest: /etc/kubernetes/
+  delegate_to: "{{ groups['k8s_control_planes'][1] }}"
+  with_items:
+    - "{{ k8s_config }}"
+
+- name: Print Join command
+  shell: sudo kubeadm token create --print-join-command
+  register: join_command
+  delegate_to: "{{ groups['k8s_control_planes'][0] }}"
+
+
+- name: Join other control planes
+  become: true
+  shell: command sudo {{item}} --control-plane
+  with_items:
+  - "{{ join_command.stdout_lines }}"
+  delegate_to: "{{ groups['k8s_control_planes'][1] }}"
+
+
+
+

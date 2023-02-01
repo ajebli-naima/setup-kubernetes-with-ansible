@@ -1,0 +1,18 @@
+---
+# defaults file for control-plane-role
+
+
+ETCD_1_IP: "{{ hostvars[groups['k8s_etcd'][0]]['ansible_host'] }}"
+ETCD_2_IP: "{{ hostvars[groups['k8s_etcd'][1]]['ansible_host'] }}"
+ETCD_3_IP: "{{ hostvars[groups['k8s_etcd'][2]]['ansible_host'] }}"
+
+
+k8s_certificates:
+  - ca.crt
+  - ca.key
+  - sa.key
+  - sa.pub
+  - front-proxy-ca.crt
+  - front-proxy-ca.key
+k8s_config:
+  - admin.conf

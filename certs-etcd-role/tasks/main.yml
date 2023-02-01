@@ -1,0 +1,33 @@
+---
+# tasks file for certs-etcd-role
+
+- name: Gather instance facts
+  setup:
+
+- name: Download cfssl required binaries
+  script: certs-etcd-role/files/cfssl-binaries.sh
+
+- name: Create a Certificate Authority (CA)
+  script:  certs-etcd-role/files/generate-ca-cert.sh
+
+- name: Create TLS certificates
+  script:  certs-etcd-role/files/create-certs.sh
+
+- name: Create Kubernetes certificates folder in Jenkins 
+  file:
+    path: /home/jenkins/k8s-certs
+    state: directory
+
+- name: Move certs to Jenkins Home
+  become: true
+  copy:
+    src: certs/{{ item }}
+    dest: /home/jenkins/k8s-certs
+  with_items:
+  - ca.pem
+  - etcd.pem
+  - etcd-key.pem
+  
+- name: Change Certs files ownership 
+  shell: command sudo chown jenkins:jenkins /home/jenkins/k8s-certs/*
+    

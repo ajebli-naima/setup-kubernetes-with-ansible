@@ -1,0 +1,58 @@
+---
+# tasks file for etcd-role
+
+- name: Gather instance facts
+  setup:
+
+- name: Create a standard location for etcd certificates
+  become: true
+  shell: command sudo mkdir -p /etc/etcd/pki
+
+- name: Copy the certificates to etcd nodes
+  become: true
+  copy:
+    src: '{{HOME}}/k8s-certs/{{ item }}'
+    dest: /etc/etcd/pki
+  with_items:
+  - ca.pem
+  - etcd.pem
+  - etcd-key.pem
+
+- name: Download etcd & etcdctl binaries from Github
+  script: etcd-role/files/etcd-binaries-downoald.sh
+
+- name: Copy systemd unit file for etcd service
+  template: 
+    src: etcd-systemd-unit-file.sh
+    dest: '{{HOME}}/etcd-systemd-unit-file.sh'
+
+- name: Create systemd unit file for etcd service
+  become: true
+  shell: |
+    chmod +x '{{HOME}}/etcd-systemd-unit-file.sh'
+    '{{HOME}}/etcd-systemd-unit-file.sh'
+
+- name: Enable and Start etcd service
+  become: true
+  shell: |
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now etcd
+
+    
+# - name: Copy etcd environment variables export file
+#   template:
+#     src: export-etcd-env.sh
+#     dest: '{{HOME}}/export-etcd-env.sh'
+
+# - name: Export etcd environment variables
+#   become: true
+#   shell: |
+#     chmod +x '{{HOME}}/export-etcd-env.sh'
+#     '{{HOME}}/export-etcd-env.sh'
+
+# - name: Verify Etcd cluster status
+#   shell: command etcdctl endpoint health 
+#   register: etcd_health_output
+
+# - debug: 
+#     var: etcd_health_output.stdout_lines

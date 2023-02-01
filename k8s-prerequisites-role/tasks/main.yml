@@ -1,0 +1,40 @@
+---
+# tasks file for k8s-prerequisites-role
+
+- name: Gather instance facts
+  setup:
+
+- name: Install Kubernetes prerequisites
+  become: true
+  script: k8s-prerequisites-role/files/install-k8s-prerequisites.sh
+  register: k8s_prerequisites
+
+- debug:
+    var: k8s_prerequisites.stdout_lines
+
+- name: Install Docker
+  become: true
+  script: k8s-prerequisites-role/files/install-docker.sh
+  register: docker_install 
+
+- debug:
+    var: docker_install.stdout_lines
+
+
+- name: check docker installation
+  shell: command which docker && docker --version
+  register: docker_version
+
+- debug:
+    var: docker_version.stdout_lines
+
+
+- name: Changing Docker Cgroup Driver to Systemd
+  script: k8s-prerequisites-role/files/docker-driver.sh
+
+- name: Enable docker
+  become: true
+  shell : |
+    systemctl enable docker
+    systemctl daemon-reload
+    systemctl restart docker

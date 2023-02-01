@@ -1,0 +1,4 @@
+- hosts: workstation
+  remote_user: jenkins
+  roles:
+    - certs-etcd-role

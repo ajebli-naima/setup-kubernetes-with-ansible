@@ -1,0 +1,37 @@
+- hosts: k8s_control_planes:k8s_workers
+  remote_user: jenkins
+  vars:
+    HOME: /home/jenkins
+  roles:
+    - k8s-prerequisites-role
+
+
+- hosts: k8s_haproxy
+  remote_user: jenkins
+  vars:
+    HOME: /home/jenkins
+  roles:
+    - haproxy-keepalived-role
+
+
+- hosts: k8s_etcd
+  remote_user: jenkins
+  vars:
+    HOME: /home/jenkins
+  roles:
+   - etcd-role
+
+
+- hosts: k8s_control_planes
+  remote_user: jenkins
+  vars:
+    HOME: /home/jenkins   
+  roles:
+   - control-plane-role
+
+- hosts: k8s_workers
+  remote_user: jenkins
+  vars:
+    HOME: /home/jenkins   
+  roles:
+   - worker-role

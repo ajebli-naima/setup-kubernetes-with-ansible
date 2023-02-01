@@ -1,0 +1,59 @@
+---
+# tasks file for haproxy-keepalived-role
+- name: Install HAproxy and Keepalived
+  become: true
+  shell: sudo apt install keepalived haproxy psmisc -y
+
+
+- name: Copy HAproxy configuration file script
+  template: 
+    src: haproxy-cfg.sh
+    dest: '{{HOME}}/haproxy-cfg.sh'
+
+- name: HAproxy configuration
+  become: true
+  shell: |
+    chmod +x '{{HOME}}/haproxy-cfg.sh'
+    '{{HOME}}/haproxy-cfg.sh'
+
+- name: Copy Keepalived configuration file script in the first Haproxy server
+  template: 
+    src: first-keepalived-cfg.sh
+    dest: '{{HOME}}/first-keepalived-cfg.sh'
+  delegate_to: "{{ groups['k8s_haproxy'][0] }}"
+
+- name: Keepalived configuration in the first HAproxy
+  become: true
+  shell: |
+    chmod +x '{{HOME}}/first-keepalived-cfg.sh'
+    '{{HOME}}/first-keepalived-cfg.sh'
+  delegate_to: "{{ groups['k8s_haproxy'][0] }}"
+
+- name: Copy Keepalived configuration file script in the first Haproxy server
+  template: 
+    src: second-keepalived-cfg.sh
+    dest: '{{HOME}}/second-keepalived-cfg.sh'
+  delegate_to: "{{ groups['k8s_haproxy'][1] }}"
+
+- name: Keepalived configuration in the second HAproxy
+  become: true
+  shell: |
+    chmod +x '{{HOME}}/second-keepalived-cfg.sh'
+    '{{HOME}}/second-keepalived-cfg.sh'
+  delegate_to: "{{ groups['k8s_haproxy'][1] }}"
+
+- name: Restart and enable HAproxy and Keepalived
+  become: true
+  shell: |
+    sudo systemctl restart haproxy
+    sudo systemctl enable haproxy
+    sudo systemctl restart keepalived
+    sudo systemctl enable haproxy
+
+
+
+
+
+
+
+

@@ -1,0 +1,14 @@
+---
+# tasks file for worker-role
+
+
+- name: Print Join command
+  shell: sudo kubeadm token create --print-join-command
+  register: join_command
+  delegate_to: "{{ groups['k8s_control_planes'][0] }}"
+
+- name: Join other control planes
+  become: true
+  shell: command sudo {{item}}
+  with_items:
+  - "{{ join_command.stdout_lines }}"

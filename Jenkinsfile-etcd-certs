@@ -1,0 +1,32 @@
+pipeline {
+    agent any
+
+
+    stages {
+        stage('File valuation') {
+            steps {
+                script {
+                          sh '''
+                          sed -i "s|<ETCD_1_IP>|${ETCD_1_IP}|" certs-etcd-role/files/*-certs.sh 
+                          sed -i "s|<ETCD_2_IP>|${ETCD_2_IP}|" certs-etcd-role/files/*-certs.sh 
+                          sed -i "s|<ETCD_3_IP>|${ETCD_3_IP}|" certs-etcd-role/files/*-certs.sh 
+                          '''
+                }
+            }
+        }
+        stage('Run playbook'){
+            steps {
+            dir('./') {
+            ansiblePlaybook  playbook: 'playbook-etcd-certs.yml',
+            colorized: false,
+            inventory: 'inventory.ini',
+            extras: params.extras,
+            limit: params.limit,
+            tags: params.tags
+            }
+
+            }
+        }
+    }
+
+}

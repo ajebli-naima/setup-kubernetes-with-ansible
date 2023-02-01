@@ -1,0 +1,14 @@
+---
+# defaults file for haproxy-keepalived-role
+
+
+MASTER_1_IP: "{{ hostvars[groups['k8s_control_planes'][0]]['ansible_default_ipv4'].address }}"
+MASTER_2_IP: "{{ hostvars[groups['k8s_control_planes'][1]]['ansible_default_ipv4'].address }}"
+
+
+
+HAPROXY_1_IP: "{{ hostvars[groups['k8s_haproxy'][0]]['ansible_default_ipv4'].address }}"
+HAPROXY_2_IP: "{{ hostvars[groups['k8s_haproxy'][1]]['ansible_default_ipv4'].address }}"
+
+
+HAPROXY_IP_ADDRESS: "{{ hostvars[inventory_hostname].ansible_host }}"

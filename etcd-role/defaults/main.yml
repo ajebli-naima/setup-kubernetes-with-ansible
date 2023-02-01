@@ -1,0 +1,16 @@
+---
+# defaults file for etcd-role
+
+ETCD_IP_ADDRESS: "{{ hostvars[inventory_hostname].ansible_host }}"
+ETCD_NAME: "{{ hostvars[inventory_hostname].inventory_hostname}}"
+
+
+ETCD_1_NAME: "{{ groups['k8s_etcd'][0] }}"
+ETCD_2_NAME: "{{ groups['k8s_etcd'][1] }}"
+ETCD_3_NAME: "{{ groups['k8s_etcd'][2] }}"
+
+
+ETCD_1_IP: "{{ hostvars[groups['k8s_etcd'][0]]['ansible_default_ipv4'].address }}"
+ETCD_2_IP: "{{ hostvars[groups['k8s_etcd'][1]]['ansible_default_ipv4'].address }}"
+ETCD_3_IP: "{{ hostvars[groups['k8s_etcd'][2]]['ansible_default_ipv4'].address }}"
+
